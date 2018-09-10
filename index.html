@@ -3,6 +3,7 @@
         <style media="screen">
             .bar {
                 fill: #00b6f1;
+                z-index: 2;
             }
 
             .tick {
@@ -10,18 +11,52 @@
                 font-size: 12px;
                 color: #494949;
             }
-            
+
+            .grid line {
+                stroke: lightgrey;
+                stroke-opacity: 0.7;
+                shape-rendering: crispEdges;
+                z-index: 1;
+            }
+
+            .grid path {
+                stroke-width: 0;
+                z-index: 1;
+            }
+
         </style>
 	</head>
 
 	<body onload="setLabel()">
-        <img src="pie-chart.svg">
-		<div id="holder"></div>
+
+        <!--pie chart svg-->
+        <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+        	 width="320.03px" height="320px" viewBox="0 0 320.03 320" enable-background="new 0 0 320.03 320" xml:space="preserve">
+        <g>
+        	<path fill="#DDDEDD" d="M299.938,82.434l-55.432,30.727c7.708,13.875,12.114,29.84,12.114,46.839c0,53.362-43.26,96.62-96.62,96.62
+        		V320c28.278,0,52.837-6.35,77.57-20.063C314.86,257.101,342.779,159.719,299.938,82.434z"/>
+        	<path fill="#00B6F1" d="M63.379,160c0-53.362,43.259-96.621,96.622-96.621c36.363,0,68.018,20.094,84.505,49.781l55.432-30.727
+        		C270.81,29.878,220.09,0,160.001,0C71.633,0,0,71.635,0,160c0,88.367,71.633,160,160.001,160v-63.38
+        		C106.639,256.62,63.379,213.362,63.379,160z"/>
+        </g>
+        <text transform="matrix(1 0 0 1 121.6807 161.2344)">
+            <tspan x="0" y="0" fill="#00B6F1" font-family="'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'" font-size="30.2931">$6.70</tspan>
+            <tspan x="1.43" y="19.245" fill="#00B6F1" font-family="'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'" font-size="16.0375">out of $10</tspan></text>
+        </svg>
+        <!--pie end-->
+
+        <div id="holder"></div>
 
 		<button id="switch" onclick="flipData()" label-raw="Show raw data" label-adjusted="Show adjusted data"></button>
 
 		<script src="https://d3js.org/d3.v5.min.js"></script>
 		<script type="text/javascript">
+
+        function make_y_gridlines() {
+            return d3.axisLeft(donationScale)
+            .ticks(10)
+        }
+
 			var key = "adjusted";
 
 			var rawData = [
@@ -117,6 +152,14 @@
                 .style('font-family', 'Helvetica Neue, Helvetica, Arial, sans-serif')
 				.text('Mean donation $');
 
+            // add the Y gridlines
+            svg.append("g")
+                .attr("class", "grid")
+                .call(make_y_gridlines()
+                .tickSize(-width)
+                .tickFormat("")
+                )
+
 			var barHolder = svg.append('g')
 				.classed('bar-holder', true);
 
@@ -138,7 +181,6 @@
 					// the bar's height should align it with the base of the chart (y=0)
 					return height - donationScale(d.v);
 				});
-
 
 		</script>
 	</body>
