@@ -6,10 +6,21 @@
                 z-index: 2;
             }
 
+            .bar:hover {
+                fill: #0098ca;
+            }
+
             .tick {
                 font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
                 font-size: 12px;
                 color: #494949;
+            }
+
+            .tooltip {
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 12px;
+                font-weight: bold;
+                fill: #353535;
             }
 
             .grid line {
@@ -180,7 +191,32 @@
 				.attr('height', function(d) {
 					// the bar's height should align it with the base of the chart (y=0)
 					return height - donationScale(d.v);
-				});
+				})
+                .on("mouseover", function()
+                    {
+                        tooltip.style("display", null);
+                    })
+                .on("mouseout", function()
+                    {
+                        tooltip.style("display", "none");
+                    })
+                .on("mousemove", function(d)
+                    {
+                        var xPos = d3.mouse(this)[0];
+                        var yPos = d3.mouse(this)[1] - 55;
+                        tooltip.attr("transform", "translate(" + xPos + "," + yPos + ")");
+                        tooltip.select("text").text("$" + d.v)
+                    });
+
+                var tooltip = svg.append("g")
+                    .attr("class", "tooltip")
+                    .style("display", "none");
+
+                tooltip.append("text")
+                    .attr("x", -10)
+                    .attr("dy", "1.2em")
+                    .style("font-size", "1.25em")
+
 
 		</script>
 	</body>
