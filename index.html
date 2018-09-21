@@ -35,10 +35,56 @@
                 z-index: 1;
             }
 
+            .label{
+                font-size: 15px;
+            }
+
+            .legend text,
+            .axis text {
+                font-size: 13px;
+                fill: #333;
+            }
+
+            .x {
+                display: none;
+            }
+
+            .axis path,
+            .axis line{
+                fill: none;
+                stroke-width: 1px;
+                stroke: #777;
+            }
+
+            .circle{
+                fill-opacity: 0.65;
+            }
+
+            .bubble{
+                opacity: 1;
+                transition: opacity 0.3s;
+            }
+
+            .bubble:hover text{
+                opacity: 1;
+            }
+
+            .bubble:hover circle{
+                fill-opacity: 1;
+            }
+
+            .legend rect{
+                fill-opacity: 0.75;
+            }
+
+            .legend:hover rect{
+                fill-opacity:1;
+            }
+
         </style>
 	</head>
 
-	<body onload="setLabel()">
+	<body onload="barD3.setLabel()">
 
         <!--pie chart svg-->
         <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
@@ -56,167 +102,357 @@
         </svg>
         <!--pie end-->
 
+        <div id="bubholder"></div>
+        <button onclick="bubD3.run()">Run</button>
+
+
         <div id="holder"></div>
 
-		<button id="switch" onclick="flipData()" label-raw="Show raw data" label-adjusted="Show adjusted data"></button>
+		<button id="switch" onclick="barD3.flipData()" label-raw="Show raw data" label-adjusted="Show adjusted data"></button>
 
 		<script src="https://d3js.org/d3.v5.min.js"></script>
 		<script type="text/javascript">
 
-        function make_y_gridlines() {
-            return d3.axisLeft(donationScale)
-            .ticks(10)
-        }
+        //---------BAR-----------//
+        var barD3 = (function () {
+            function make_y_gridlines() {
+                return d3.axisLeft(donationScale)
+                .ticks(10)
+            }
 
-			var key = "adjusted";
+    		var key = "adjusted";
 
-			var rawData = [
-				{mode: 'Walking', raw: 7.41, adjusted: 6.95},
-				{mode: 'Bicycle', raw: 6.92, adjusted: 7.36},
-				{mode: 'Bus', raw: 5.8, adjusted: 6.37},
-				{mode: 'Train/Rail', raw: 5.71, adjusted: 5.52},
-				{mode: 'Driving', raw: 7.19, adjusted: 6.88},
-			];
+    		var rawData = [
+    			{mode: 'Walking', raw: 7.41, adjusted: 6.95},
+    			{mode: 'Bicycle', raw: 6.92, adjusted: 7.36},
+    			{mode: 'Bus', raw: 5.8, adjusted: 6.37},
+    			{mode: 'Train/Rail', raw: 5.71, adjusted: 5.52},
+    			{mode: 'Driving', raw: 7.19, adjusted: 6.88},
+    		];
 
-			function projectData(key) {
-				return rawData.map(function(r) {
-					return {mode: r.mode, v: r[key]};
-				});
-			}
+    		function projectData(key) {
+    			return rawData.map(function(r) {
+    				return {mode: r.mode, v: r[key]};
+    			});
+    		}
 
-			function setLabel() {
-				var btn = document.getElementById("switch");
-				btn.innerHTML = btn.getAttribute("label-" + (key == 'raw' ? 'adjusted' : 'raw'));
-			}
+    		function setLabel() {
+    			var btn = document.getElementById("switch");
+    			btn.innerHTML = btn.getAttribute("label-" + (key == 'raw' ? 'adjusted' : 'raw'));
+    		}
 
-			function flipData() {
-				key = key === 'raw' ? 'adjusted' : 'raw';
+    		function flipData() {
+    			key = key === 'raw' ? 'adjusted' : 'raw';
 
-				setLabel();
+    			setLabel();
 
-				bars.data(projectData(key))
-					.transition()
-					.duration(1000)
-					.attr('y', function(d) {
-						return donationScale(d.v);
-					})
-					.attr('height', function(d) {
-						return height - donationScale(d.v);
-					});
-			}
+    			bars.data(projectData(key))
+    				.transition()
+    				.duration(1000)
+    				.attr('y', function(d) {
+    					return donationScale(d.v);
+    				})
+    				.attr('height', function(d) {
+    					return height - donationScale(d.v);
+    				});
+    		}
 
-			data = projectData(key);
+    		data = projectData(key);
 
-			var margin = {top: 5, right: 5, bottom: 50, left: 50};
-			// here, we want the full chart to be 700x200, so we determine
-			// the width and height by subtracting the margins from those values
-			var fullWidth = 450;
-			var fullHeight = 450;
-			// the width and height values will be used in the ranges of our scales
-			var width = fullWidth - margin.right - margin.left;
-			var height = fullHeight - margin.top - margin.bottom;
-			var svg = d3.select('#holder').append('svg')
-				.attr('width', fullWidth)
-				.attr('height', fullHeight)
-				// this g is where the bar chart will be drawn
-				.append('g')
-				// translate it to leave room for the left and top margins
-				.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+    		var margin = {top: 5, right: 5, bottom: 50, left: 50};
+    		// here, we want the full chart to be 700x200, so we determine
+    		// the width and height by subtracting the margins from those values
+    		var fullWidth = 450;
+    		var fullHeight = 450;
+    		// the width and height values will be used in the ranges of our scales
+    		var width = fullWidth - margin.right - margin.left;
+    		var height = fullHeight - margin.top - margin.bottom;
+    		var svg = d3.select('#holder').append('svg')
+    			.attr('width', fullWidth)
+    			.attr('height', fullHeight)
+    			// this g is where the bar chart will be drawn
+    			.append('g')
+    			// translate it to leave room for the left and top margins
+    			.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
-			// x value determined by month
-			var modeScale = d3.scaleBand()
-				.domain(data.map(function(t) {
-					return t.mode
-				}))
-				.range([0, width])
-				.paddingInner(0.4);
+    		// x value determined by month
+    		var modeScale = d3.scaleBand()
+    			.domain(data.map(function(t) {
+    				return t.mode
+    			}))
+    			.range([0, width])
+    			.paddingInner(0.4);
 
-			// the width of the bars is determined by the scale
-			var bandwidth = modeScale.bandwidth();
+    		// the width of the bars is determined by the scale
+    		var bandwidth = modeScale.bandwidth();
 
-			var maxDonation = 10;
-			var donationScale = d3.scaleLinear()
-				.domain([0, maxDonation])
-				.range([height, 0])
-				.nice();
+    		var maxDonation = 10;
+    		var donationScale = d3.scaleLinear()
+    			.domain([0, maxDonation])
+    			.range([height, 0])
+    			.nice();
 
-			var xAxis = d3.axisBottom(modeScale);
-			var yAxis = d3.axisLeft(donationScale);
+    		var xAxis = d3.axisBottom(modeScale);
+    		var yAxis = d3.axisLeft(donationScale);
 
-			// draw the axes
-			svg.append('g')
-				.classed('x axis', true)
-				.attr('transform', 'translate(0,' + height + ')')
-				.call(xAxis);
+    		// draw the axes
+    		svg.append('g')
+    			.classed('x axis', true)
+    			.attr('transform', 'translate(0,' + height + ')')
+    			.call(xAxis);
 
-			var yAxisEle = svg.append('g')
-				.classed('y axis', true)
-				.call(yAxis);
+    		var yAxisEle = svg.append('g')
+    			.classed('y axis', true)
+    			.call(yAxis);
 
-			// add a label to the yAxis
-			var yText = yAxisEle.append('text')
-				.attr('transform', 'rotate(-90)translate(-' + height/2 + ',0)')
-				.style('text-anchor', 'middle')
-				.style('fill', '#494949')
-				.attr('dy', '-2.5em')
-				.style('font-size', '12px')
+    		// add a label to the yAxis
+    		var yText = yAxisEle.append('text')
+    			.attr('transform', 'rotate(-90)translate(-' + height/2 + ',0)')
+    			.style('text-anchor', 'middle')
+    			.style('fill', '#494949')
+    			.attr('dy', '-2.5em')
+    			.style('font-size', '12px')
                 .style('font-family', 'Helvetica Neue, Helvetica, Arial, sans-serif')
-				.text('Mean donation $');
+    			.text('Mean donation $');
 
             // add the Y gridlines
             svg.append("g")
                 .attr("class", "grid")
-                .call(make_y_gridlines()
-                .tickSize(-width)
-                .tickFormat("")
+                .call(
+                    make_y_gridlines()
+                    .tickSize(-width)
+                    .tickFormat("")
                 )
 
-			var barHolder = svg.append('g')
-				.classed('bar-holder', true);
+    		var barHolder = svg.append('g')
+    			.classed('bar-holder', true);
 
-			var bars = barHolder.selectAll('rect.bar')
-				.data(data)
-				.enter().append('rect')
-				.classed('bar', true)
-				.attr('x', function(d, i) {
-					// the x value is determined using the
-					// month of the datum
-					return modeScale(d.mode)
-				})
-				.attr('width', bandwidth)
-				.attr('y', function(d) {
-					// this value is the top edge of the rectangle
-					return donationScale(d.v);
-				})
-				.attr('height', function(d) {
-					// the bar's height should align it with the base of the chart (y=0)
-					return height - donationScale(d.v);
-				})
-                .on("mouseover", function()
-                    {
-                        tooltip.style("display", null);
-                    })
-                .on("mouseout", function()
-                    {
-                        tooltip.style("display", "none");
-                    })
-                .on("mousemove", function(d)
-                    {
-                        var xPos = d3.mouse(this)[0];
-                        var yPos = d3.mouse(this)[1] - 55;
-                        tooltip.attr("transform", "translate(" + xPos + "," + yPos + ")");
-                        tooltip.select("text").text("$" + d.v)
-                    });
+    		var bars = barHolder.selectAll('rect.bar')
+    			.data(data)
+    			.enter().append('rect')
+    			.classed('bar', true)
+    			.attr('x', function(d, i) {
+    				// the x value is determined using the
+    				// month of the datum
+    				return modeScale(d.mode)
+    			})
+    			.attr('width', bandwidth)
+    			.attr('y', function(d) {
+    				// this value is the top edge of the rectangle
+    				return donationScale(d.v);
+    			})
+    			.attr('height', function(d) {
+    				// the bar's height should align it with the base of the chart (y=0)
+    				return height - donationScale(d.v);
+    			})
+                .on("mouseover", function() {
+                    tooltip.style("display", null);
+                })
+                .on("mouseout", function() {
+                    tooltip.style("display", "none");
+                })
+                .on("mousemove", function(d) {
+                    var xPos = d3.mouse(this)[0];
+                    var yPos = d3.mouse(this)[1] - 55;
+                    tooltip.attr("transform", "translate(" + xPos + "," + yPos + ")");
+                    tooltip.select("text").text("$" + d.v)
+                });
 
-                var tooltip = svg.append("g")
-                    .attr("class", "tooltip")
-                    .style("display", "none");
+            var tooltip = svg.append("g")
+                .attr("class", "tooltip")
+                .style("display", "none");
 
-                tooltip.append("text")
-                    .attr("x", -10)
-                    .attr("dy", "1.2em")
-                    .style("font-size", "1.25em")
+            tooltip.append("text")
+                .attr("x", -10)
+                .attr("dy", "1.2em")
+                .style("font-size", "1.25em");
 
+            return {
+                flipData: flipData,
+                setLabel: setLabel
+            };
+        })();
+
+        var bubD3 = (function(){
+
+            var margin = {top: 30, right: 50, bottom: 40, left:40};
+            var width = 960 - margin.left - margin.right;
+            var height = 500 - margin.top - margin.bottom;
+
+            var svg = d3.select('#bubholder')
+                .append('svg')
+                .attr('width', width + margin.left + margin.right)
+                .attr('height', height + margin.top + margin.bottom)
+                .append('g')
+                .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
+            function run() {
+                // move the circle
+                svg.selectAll('.bubble')
+                    .data(data)
+                    .transition()
+                    .duration(1000)
+                    .select('circle')
+                    .attr('cy', function(d){ return yScale(d.donation); });
+
+                // move the text
+                svg.selectAll('.bubble')
+                    .data(data)
+                    .transition()
+                    .duration(1000)
+                    .select('text')
+                    .attr('dy', function(d) { return yScale(d.donation); });
+            }
+
+            // The API for scales have changed in v4. There is a separate module d3-scale which can be used instead. The main change here is instead of d3.scale.linear, we have d3.scaleLinear.
+            var xScale = d3.scaleLinear().range([0, width]);
+
+            var yScale = d3.scaleLinear().range([height, 0]);
+
+            // the axes are much cleaner and easier now. No need to rotate and orient the axis, just call axisBottom, axisLeft etc.
+            var xAxis = d3.axisBottom().scale(xScale).ticks(0);
+
+            var yAxis = d3.axisLeft().scale(yScale);
+
+            // again scaleOrdinal
+            var color = d3.scaleOrdinal(["#1f77b4", "#aec7e8"]);
+
+            var data = [
+                {
+                    x: 1,
+                    name: 'Train/Rail',
+                    income: 58571,
+                    donation: 5.71,
+                    radius: 62,
+                    agency: "Agency",
+                },
+                {
+                    x: 2,
+                    name: 'Bus',
+                    income: 61250,
+                    donation: 5.8,
+                    radius: 63,
+                    agency: "No agency",
+                },
+                {
+                    x: 3,
+                    name: 'Walking',
+                    income: 41428,
+                    donation: 7.41,
+                    radius: 52,
+                    agency: "No agency",
+                },
+                {
+                    x: 4,
+                    name: 'Driving',
+                    income: 64814,
+                    donation: 7.19,
+                    radius: 65,
+                    agency: "Agency",
+                },
+                {
+                    x: 5,
+                    name: 'Bicycle',
+                    income: 39600,
+                    donation: 6.92,
+                    radius: 51,
+                    agency: "Agency",
+                }
+            ];
+
+            xScale.domain([-1, 7]);
+
+            yScale.domain([0, 10]);
+
+            var initialData = data.map(function (d) {
+                return {
+                    x: d.x,
+                    name: d.name,
+                    income: d.income,
+                    donation: 3,
+                    radius: d.radius,
+                    agency: d.agency,
+                };
+            });
+
+            // adding axes is also simpler now, just translate x-axis to (0,height) and it's alread defined to be a bottom axis.
+            svg.append('g')
+                .attr('transform', 'translate(0,' + height + ')')
+                .attr('class', 'x axis')
+                .call(xAxis);
+
+            // y-axis is translated to (0,0)
+            svg.append('g')
+                .attr('transform', 'translate(0,0)')
+                .attr('class', 'y axis')
+                .call(yAxis);
+
+            var bubbleGroup = svg.selectAll('.bubble')
+                .data(initialData)
+                .enter().append('g')
+                .attr('class', 'bubble')
+                .attr("transform", function(d) {
+                    return "translate(" + xScale(d.x) + ",80)"
+                });
+
+            bubbleGroup.append('circle')
+                // .attr('cx', function(d){ return xScale(d.x);})
+                .attr('cy', function(d){ return yScale(d.donation); })
+                .attr('r', function(d){ return d.radius; })
+                .style('fill', function(d){ return color(d.agency); });
+
+            bubbleGroup.append('text')
+                .attr('text-anchor', 'middle')
+                .attr('dy', function(d) {return yScale(d.donation);})
+                .text(function(d){
+                    return d.name;
+                });
+
+            // adding label. For x-axis, it's at (10, 10), and for y-axis at (width, height-10).
+            svg.append('text')
+                .attr('x', 10)
+                .attr('y', 10)
+                .attr('class', 'label')
+                .text('Donation size');
+        //
+        //     svg.append('text')
+        //         .attr('x', width)
+        //         .attr('y', height - 10)
+        //         .attr('text-anchor', 'end')
+        //         .attr('class', 'label')
+        //         .text('Mode of transport');
+
+            // I feel I understand legends much better now.
+            // define a group element for each color i, and translate it to (0, i * 20).
+            var legend = svg.selectAll('legend')
+                .data(color.domain())
+                .enter().append('g')
+                .attr('class', 'legend')
+                .attr('transform', function(d,i){ return 'translate(0,' + i * 20 + ')'; });
+
+            // give x value equal to the legend elements.
+            // no need to define a function for fill, this is automatically fill by color.
+            legend.append('rect')
+                .attr('x', width)
+                .attr('width', 18)
+                .attr('height', 18)
+                .style('fill', color);
+
+            // add text to the legend elements.
+            // rects are defined at x value equal to width, we define text at width - 6, this will print name of the legends before the rects.
+            legend.append('text')
+                .attr('x', width - 6)
+                .attr('y', 9)
+                .attr('dy', '.35em')
+                .style('text-anchor', 'end')
+                .text(function(d){ return d; });
+
+
+            return {
+                run: run
+            }
+
+        }) ();
 
 		</script>
 	</body>
